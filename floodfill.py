@@ -59,7 +59,6 @@ class FloodFill:
         flood level for each tile in the map. The function takes no arguments, and returns a list of lists containing
         integers.
 
-        :param self: Refer to the object itself
         :return: A 2d array of integers, where each integer represents the number of tiles
         """
         midpoint = (self.w - 1) / 2
@@ -225,7 +224,6 @@ class FloodFill:
         visited. Once all cells have been visited, it logs how many steps were taken and
         then optimizes those steps using cut_redundant_steps().
 
-        :param self: Refer to the object itself
         :return: None
         """
         self.mouse.set_color(self.current[0], self.current[1], COLORS.DARK_GREEN)
