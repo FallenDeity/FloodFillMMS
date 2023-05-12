@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import time
 
-from api import COLORS, Mouse
-from floodfill import FloodFill
+from utils.api import COLORS, Mouse
+from utils.floodfill import FloodFill
 
 
 def main():

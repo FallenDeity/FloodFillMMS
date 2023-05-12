@@ -6,10 +6,10 @@ import typing
 from collections import deque
 from functools import lru_cache
 
-from api import COLORS, DIRECTIONS
+from utils.api import COLORS, DIRECTIONS
 
 if typing.TYPE_CHECKING:
-    from api import Mouse
+    from utils.api import Mouse
 
 
 __all__: typing.Tuple[str, ...] = ("FloodFill",)
