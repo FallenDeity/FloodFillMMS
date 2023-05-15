@@ -75,6 +75,18 @@ class RANGES(enum.IntEnum):
 
 @dataclasses.dataclass(kw_only=True, frozen=True, slots=True)
 class Accelerometer:
+    """
+    Accelerometer data
+
+    Attributes
+    ----------
+    x : float
+        x-axis data in m/s^2
+    y : float
+        y-axis data in m/s^2
+    z : float
+        z-axis data in m/s^2
+    """
     x: float
     y: float
     z: float
@@ -94,6 +106,18 @@ class Accelerometer:
 
 @dataclasses.dataclass(kw_only=True, frozen=True, slots=True)
 class Gyroscope:
+    """
+    Gyroscope data
+
+    Attributes
+    ----------
+    x : float
+        x-axis data in deg/s
+    y : float
+        y-axis data in deg/s
+    z : float
+        z-axis data in deg/s
+    """
     x: float
     y: float
     z: float
