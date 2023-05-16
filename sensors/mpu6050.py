@@ -2,8 +2,20 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import math
+import time
+import typing as t
 
 import smbus
+
+__all__: t.Tuple[str, ...] = (
+    "MPU6050",
+    "REGISTERS",
+    "SCALES",
+    "Accelerometer",
+    "Gyroscope",
+    "KalmanFilter",
+)
 
 
 class REGISTERS(enum.IntEnum):
@@ -73,6 +85,37 @@ class RANGES(enum.IntEnum):
     FILTER_5HZ = 0x06
 
 
+class KalmanFilter:
+    q_angle: float = 0.001
+    q_bias: float = 0.003
+    r_measure: float = 0.03
+
+    def __init__(self, angle: float = 0.0, bias: float = 0.0):
+        self.angle = angle
+        self.bias = bias
+        self.rate = 0.0
+        self.P = [[0.0, 0.0], [0.0, 0.0]]
+
+    def update(self, new_angle: float, new_rate: float, dt: float) -> float:
+        self.rate = new_rate - self.bias
+        self.angle += dt * self.rate
+        self.P[0][0] += dt * (dt * self.P[1][1] - self.P[0][1] - self.P[1][0] + self.q_angle)
+        self.P[0][1] -= dt * self.P[1][1]
+        self.P[1][0] -= dt * self.P[1][1]
+        self.P[1][1] += self.q_bias * dt
+        y = new_angle - self.angle
+        s = self.P[0][0] + self.r_measure
+        k = [self.P[0][0] / s, self.P[1][0] / s]
+        self.angle += k[0] * y
+        self.bias += k[1] * y
+        p00_temp, p01_temp = self.P[0][0], self.P[0][1]
+        self.P[0][0] -= k[0] * p00_temp
+        self.P[0][1] -= k[0] * p01_temp
+        self.P[1][0] -= k[1] * p00_temp
+        self.P[1][1] -= k[1] * p01_temp
+        return self.angle
+
+
 @dataclasses.dataclass(kw_only=True, frozen=True, slots=True)
 class Accelerometer:
     """
@@ -87,9 +130,58 @@ class Accelerometer:
     z : float
         z-axis data in m/s^2
     """
+
     x: float
     y: float
     z: float
+
+    @property
+    def magnitude(self) -> float:
+        """
+        Magnitude of the accelerometer data
+
+        Returns
+        -------
+        float
+            magnitude of the accelerometer data
+        """
+        return math.sqrt(self.x**2 + self.y**2 + self.z**2)
+
+    @property
+    def pitch(self) -> float:
+        """
+        Pitch angle in degrees
+
+        Returns
+        -------
+        float
+            pitch angle in degrees
+        """
+        return math.degrees(math.atan2(self.x, math.sqrt(self.y**2 + self.z**2)))
+
+    @property
+    def roll(self) -> float:
+        """
+        Roll angle in degrees
+
+        Returns
+        -------
+        float
+            roll angle in degrees
+        """
+        return math.degrees(math.atan2(self.y, math.sqrt(self.x**2 + self.z**2)))
+
+    @property
+    def yaw(self) -> float:
+        """
+        Yaw angle in degrees
+
+        Returns
+        -------
+        float
+            yaw angle in degrees
+        """
+        return math.degrees(math.atan2(self.z, math.sqrt(self.x**2 + self.y**2)))
 
     def to_g(self) -> tuple[float, float, float]:
         """
@@ -118,6 +210,7 @@ class Gyroscope:
     z : float
         z-axis data in deg/s
     """
+
     x: float
     y: float
     z: float
@@ -283,3 +376,22 @@ class MPU6050:
         gyro_scale = mapping.get(gyro_range, SCALES.GYRO_SCALE_MODIFIER_250DEG)
         x, y, z = (value / gyro_scale for value in (x, y, z))
         return Gyroscope(x=x, y=y, z=z)
+
+
+if __name__ == "__main__":
+    kalman_x = KalmanFilter()
+    kalman_y = KalmanFilter()
+    mpu = MPU6050()
+    accel = mpu.get_accel_data()
+    kalman_x.angle = accel.roll
+    kalman_y.angle = accel.pitch
+    timer = time.time()
+    while True:
+        accel = mpu.get_accel_data()
+        gyro = mpu.get_gyro_data()
+        dt = time.time() - timer
+        timer = time.time()
+        roll = kalman_x.update(accel.roll, gyro.x, dt)
+        pitch = kalman_y.update(accel.pitch, gyro.y, dt)
+        print(f"roll: {roll:.2f} pitch: {pitch:.2f}")
+        time.sleep(1e-3)

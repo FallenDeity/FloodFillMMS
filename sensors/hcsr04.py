@@ -44,3 +44,13 @@ class HCSR04:
         Cleanup GPIO
         """
         GPIO.cleanup()
+
+
+if __name__ == "__main__":
+    sensor = HCSR04(trigger_pin=23, echo_pin=24)
+    try:
+        while True:
+            print(sensor.get_distance())
+            time.sleep(1e-2)
+    except KeyboardInterrupt:
+        sensor.cleanup()

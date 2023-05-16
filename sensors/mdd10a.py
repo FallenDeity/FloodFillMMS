@@ -49,3 +49,13 @@ class Motor:
         """
         self.stop()
         GPIO.cleanup()
+
+
+if __name__ == "__main__":
+    motor = Motor(direction_pin=20, pwm_pin=21)
+    try:
+        while True:
+            motor.set_speed(100)
+            motor.set_direction(True)
+    except KeyboardInterrupt:
+        motor.cleanup()
