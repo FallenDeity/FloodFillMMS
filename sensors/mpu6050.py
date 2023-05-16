@@ -3,7 +3,6 @@ from __future__ import annotations
 import dataclasses
 import enum
 import math
-import time
 import typing as t
 
 import smbus
@@ -14,7 +13,6 @@ __all__: t.Tuple[str, ...] = (
     "SCALES",
     "Accelerometer",
     "Gyroscope",
-    "KalmanFilter",
 )
 
 
@@ -85,37 +83,6 @@ class RANGES(enum.IntEnum):
     FILTER_5HZ = 0x06
 
 
-class KalmanFilter:
-    q_angle: float = 0.001
-    q_bias: float = 0.003
-    r_measure: float = 0.03
-
-    def __init__(self, angle: float = 0.0, bias: float = 0.0):
-        self.angle = angle
-        self.bias = bias
-        self.rate = 0.0
-        self.P = [[0.0, 0.0], [0.0, 0.0]]
-
-    def update(self, new_angle: float, new_rate: float, dt: float) -> float:
-        self.rate = new_rate - self.bias
-        self.angle += dt * self.rate
-        self.P[0][0] += dt * (dt * self.P[1][1] - self.P[0][1] - self.P[1][0] + self.q_angle)
-        self.P[0][1] -= dt * self.P[1][1]
-        self.P[1][0] -= dt * self.P[1][1]
-        self.P[1][1] += self.q_bias * dt
-        y = new_angle - self.angle
-        s = self.P[0][0] + self.r_measure
-        k = [self.P[0][0] / s, self.P[1][0] / s]
-        self.angle += k[0] * y
-        self.bias += k[1] * y
-        p00_temp, p01_temp = self.P[0][0], self.P[0][1]
-        self.P[0][0] -= k[0] * p00_temp
-        self.P[0][1] -= k[0] * p01_temp
-        self.P[1][0] -= k[1] * p00_temp
-        self.P[1][1] -= k[1] * p01_temp
-        return self.angle
-
-
 @dataclasses.dataclass(kw_only=True, frozen=True, slots=True)
 class Accelerometer:
     """
@@ -182,6 +149,22 @@ class Accelerometer:
             yaw angle in degrees
         """
         return math.degrees(math.atan2(self.z, math.sqrt(self.x**2 + self.y**2)))
+
+    @property
+    def tilt_angles(self) -> tuple[float, float, float]:
+        """
+        Tilt angles in degrees
+
+        Returns
+        -------
+        tuple[float, float, float]
+            tilt angles in degrees
+        """
+        x_, y_, z_ = self.to_g()
+        tilt_x = math.degrees(math.atan2(y_, math.sqrt(x_**2 + z_**2)))
+        tilt_y = math.degrees(math.atan2(-x_, math.sqrt(y_**2 + z_**2)))
+        tilt_z = math.degrees(math.atan2(z_, math.sqrt(x_**2 + y_**2)))
+        return tilt_x, tilt_y, tilt_z
 
     def to_g(self) -> tuple[float, float, float]:
         """
@@ -379,19 +362,7 @@ class MPU6050:
 
 
 if __name__ == "__main__":
-    kalman_x = KalmanFilter()
-    kalman_y = KalmanFilter()
     mpu = MPU6050()
-    accel = mpu.get_accel_data()
-    kalman_x.angle = accel.roll
-    kalman_y.angle = accel.pitch
-    timer = time.time()
+
     while True:
-        accel = mpu.get_accel_data()
-        gyro = mpu.get_gyro_data()
-        dt = time.time() - timer
-        timer = time.time()
-        roll = kalman_x.update(accel.roll, gyro.x, dt)
-        pitch = kalman_y.update(accel.pitch, gyro.y, dt)
-        print(f"roll: {roll:.2f} pitch: {pitch:.2f}")
-        time.sleep(1e-3)
+        print(mpu.get_accel_data().tilt_angles)
