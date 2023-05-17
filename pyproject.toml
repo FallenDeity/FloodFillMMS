@@ -46,3 +46,4 @@ reportMissingModuleSource = false
 reportMissingTypeStubs = false
 reportUnknownMemberType = false
 reportMissingImports = false
+reportUnknownVariableType = false

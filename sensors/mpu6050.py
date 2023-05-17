@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import math
 import time
 import typing as t
 
 import smbus
+from pyquaternion import Quaternion
 
 __all__: t.Tuple[str, ...] = (
     "MPU6050",
@@ -152,6 +154,18 @@ class Gyroscope:
     def __add__(self, other: Gyroscope) -> Gyroscope:
         return Gyroscope(self.x + other.x, self.y + other.y, self.z + other.z)
 
+    def to_rad(self) -> tuple[float, float, float]:
+        """
+        Convert to radians
+
+        Returns
+        -------
+        tuple[float, float, float]
+            gyroscope data in radians
+        """
+        x, y, z = (v * (180 / math.pi) for v in (self.x, self.y, self.z))
+        return x, y, z
+
 
 class MPU6050:
     __slots__: tuple[str, ...] = (
@@ -173,7 +187,7 @@ class MPU6050:
         self._init_mpu6050()
         self._calibrate()
 
-    def _calibrate(self, iterations: int = 400) -> None:
+    def _calibrate(self, iterations: int = 200) -> None:
         print("Calibrating MPU6050...")
         for _ in range(iterations):
             self._accelerometer_calibration += self.get_accel_data()
@@ -338,11 +352,34 @@ class MPU6050:
         return Gyroscope(x=x, y=y, z=z)
 
 
+def calculate_yaw_angle(gyro: Gyroscope, acc: Accelerometer, dt: float) -> float:
+    """
+    Calculate yaw angle
+
+    Parameters
+    ----------
+    gyro : Gyroscope
+        gyroscope data
+    acc : Accelerometer
+        accelerometer data
+    dt : float
+        time interval
+
+    Returns
+    -------
+    float
+        yaw angle
+    """
+    accel_quat = Quaternion(axis=(acc.x, acc.y, acc.z), angle=0.0)
+    gyro_quat = Quaternion(axis=(0, 0, 1), angle=gyro.z * dt)
+    return (gyro_quat * accel_quat).yaw_pitch_roll[0]
+
+
 if __name__ == "__main__":
     mpu = MPU6050()
-    start_time = time.time()
+    yaw = 0.0
+    dt = 0.01
     while True:
-        gyro = mpu.get_gyro_data()
-        time_diff = time.time() - start_time
-        print(f"yaw: {gyro.z * time_diff}")
-        time.sleep(0.01)
+        yaw += calculate_yaw_angle(mpu.get_gyro_data(), mpu.get_accel_data(), dt)
+        print(yaw % 360)
+        time.sleep(dt)
