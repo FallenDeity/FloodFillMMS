@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-import math
+import time
 import typing as t
 
 import smbus
@@ -83,7 +83,7 @@ class RANGES(enum.IntEnum):
     FILTER_5HZ = 0x06
 
 
-@dataclasses.dataclass(kw_only=True, frozen=True, slots=True)
+@dataclasses.dataclass
 class Accelerometer:
     """
     Accelerometer data
@@ -102,69 +102,14 @@ class Accelerometer:
     y: float
     z: float
 
-    @property
-    def magnitude(self) -> float:
-        """
-        Magnitude of the accelerometer data
+    def __add__(self, other: Accelerometer) -> Accelerometer:
+        return Accelerometer(self.x + other.x, self.y + other.y, self.z + other.z)
 
-        Returns
-        -------
-        float
-            magnitude of the accelerometer data
-        """
-        return math.sqrt(self.x**2 + self.y**2 + self.z**2)
+    def __sub__(self, other: Accelerometer) -> Accelerometer:
+        return Accelerometer(self.x - other.x, self.y - other.y, self.z - other.z)
 
-    @property
-    def pitch(self) -> float:
-        """
-        Pitch angle in degrees
-
-        Returns
-        -------
-        float
-            pitch angle in degrees
-        """
-        return math.degrees(math.atan2(self.x, math.sqrt(self.y**2 + self.z**2)))
-
-    @property
-    def roll(self) -> float:
-        """
-        Roll angle in degrees
-
-        Returns
-        -------
-        float
-            roll angle in degrees
-        """
-        return math.degrees(math.atan2(self.y, math.sqrt(self.x**2 + self.z**2)))
-
-    @property
-    def yaw(self) -> float:
-        """
-        Yaw angle in degrees
-
-        Returns
-        -------
-        float
-            yaw angle in degrees
-        """
-        return math.degrees(math.atan2(self.z, math.sqrt(self.x**2 + self.y**2)))
-
-    @property
-    def tilt_angles(self) -> tuple[float, float, float]:
-        """
-        Tilt angles in degrees
-
-        Returns
-        -------
-        tuple[float, float, float]
-            tilt angles in degrees
-        """
-        x_, y_, z_ = self.to_g()
-        tilt_x = math.degrees(math.atan2(y_, math.sqrt(x_**2 + z_**2)))
-        tilt_y = math.degrees(math.atan2(-x_, math.sqrt(y_**2 + z_**2)))
-        tilt_z = math.degrees(math.atan2(z_, math.sqrt(x_**2 + y_**2)))
-        return tilt_x, tilt_y, tilt_z
+    def __truediv__(self, other: float) -> Accelerometer:
+        return Accelerometer(self.x / other, self.y / other, self.z / other)
 
     def to_g(self) -> tuple[float, float, float]:
         """
@@ -179,7 +124,7 @@ class Accelerometer:
         return x, y, z
 
 
-@dataclasses.dataclass(kw_only=True, frozen=True, slots=True)
+@dataclasses.dataclass
 class Gyroscope:
     """
     Gyroscope data
@@ -198,19 +143,47 @@ class Gyroscope:
     y: float
     z: float
 
+    def __truediv__(self, other: float) -> Gyroscope:
+        return Gyroscope(self.x / other, self.y / other, self.z / other)
+
+    def __sub__(self, other: Gyroscope) -> Gyroscope:
+        return Gyroscope(self.x - other.x, self.y - other.y, self.z - other.z)
+
+    def __add__(self, other: Gyroscope) -> Gyroscope:
+        return Gyroscope(self.x + other.x, self.y + other.y, self.z + other.z)
+
 
 class MPU6050:
     __slots__: tuple[str, ...] = (
         "address",
         "bus_number",
         "bus",
+        "_accelerometer_calibration",
+        "_gyroscope_calibration",
+        "_calibrated",
     )
 
     def __init__(self, address: int = 0x68, bus_number: int = 1) -> None:
         self.address = address
         self.bus_number = bus_number
         self.bus = smbus.SMBus(self.bus_number)
+        self._accelerometer_calibration = Accelerometer(0, 0, 0)
+        self._gyroscope_calibration = Gyroscope(0, 0, 0)
+        self._calibrated = False
         self._init_mpu6050()
+        self._calibrate()
+
+    def _calibrate(self, iterations: int = 400) -> None:
+        print("Calibrating MPU6050...")
+        for _ in range(iterations):
+            self._accelerometer_calibration += self.get_accel_data()
+            self._gyroscope_calibration += self.get_gyro_data()
+            time.sleep(1e-2)
+        self._accelerometer_calibration /= iterations
+        self._gyroscope_calibration /= iterations
+        self._accelerometer_calibration.z -= SCALES.GRAVIY_MS2
+        self._calibrated = True
+        print("Calibration complete")
 
     def _init_mpu6050(self) -> None:
         """
@@ -332,6 +305,8 @@ class MPU6050:
         }
         accel_scale = mapping.get(accel_range, SCALES.ACCEL_SCALE_MODIFIER_2G)
         x, y, z = ((value * SCALES.GRAVIY_MS2) / accel_scale for value in (x, y, z))
+        if self._calibrated:
+            return Accelerometer(x=x, y=y, z=z) - self._accelerometer_calibration
         return Accelerometer(x=x, y=y, z=z)
 
     def get_gyro_data(self) -> Gyroscope:
@@ -358,11 +333,16 @@ class MPU6050:
         }
         gyro_scale = mapping.get(gyro_range, SCALES.GYRO_SCALE_MODIFIER_250DEG)
         x, y, z = (value / gyro_scale for value in (x, y, z))
+        if self._calibrated:
+            return Gyroscope(x=x, y=y, z=z) - self._gyroscope_calibration
         return Gyroscope(x=x, y=y, z=z)
 
 
 if __name__ == "__main__":
     mpu = MPU6050()
-
+    start_time = time.time()
     while True:
-        print(mpu.get_accel_data().tilt_angles)
+        gyro = mpu.get_gyro_data()
+        time_diff = time.time() - start_time
+        print(f"yaw: {gyro.z * time_diff}")
+        time.sleep(0.01)

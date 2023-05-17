@@ -7,11 +7,13 @@ import RPi.GPIO as GPIO
 class Motor:
     direction_pin: int
     pwm_pin: int
+    enable_pin: int
 
     def __post_init__(self) -> None:
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.direction_pin, GPIO.OUT)
         GPIO.setup(self.pwm_pin, GPIO.OUT)
+        GPIO.setup(self.enable_pin, GPIO.OUT)
         self.pwm = GPIO.PWM(self.pwm_pin, 100)
         self.pwm.start(0)
 
@@ -52,7 +54,7 @@ class Motor:
 
 
 if __name__ == "__main__":
-    motor = Motor(direction_pin=20, pwm_pin=21)
+    motor = Motor(direction_pin=20, pwm_pin=21, enable_pin=22)
     try:
         while True:
             motor.set_speed(100)

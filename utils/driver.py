@@ -1,11 +1,11 @@
 import keyboard
 
-from ..sensors import mdd10a
+from ..sensors import l29x
 
 
 class Driver:
-    left_motor = mdd10a.Motor(direction_pin=23, pwm_pin=24)
-    right_motor = mdd10a.Motor(direction_pin=18, pwm_pin=25)
+    left_motor = l29x.Motor(direction_pin=23, pwm_pin=24, enable_pin=22)
+    right_motor = l29x.Motor(direction_pin=18, pwm_pin=25, enable_pin=4)
 
     def _set_speed(self, speed: int) -> None:
         self.left_motor.set_speed(speed)
