@@ -378,8 +378,6 @@ def calculate_yaw_angle(gyro: Gyroscope, acc: Accelerometer, dt: float) -> float
 if __name__ == "__main__":
     mpu = MPU6050()
     yaw = 0.0
-    dt = 0.01
     while True:
-        yaw += calculate_yaw_angle(mpu.get_gyro_data(), mpu.get_accel_data(), dt)
+        yaw += calculate_yaw_angle(mpu.get_gyro_data(), mpu.get_accel_data(), 0.01)
         print(yaw % 360)
-        time.sleep(dt)
