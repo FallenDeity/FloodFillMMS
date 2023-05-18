@@ -236,12 +236,6 @@ class FloodFill:
         self.log(f"Done! {len(steps)} steps taken.")
         steps = self.cut_redundant_steps(steps)
         self.log(f"Optimized to {len(steps)} steps.")
-        # uncomment the following lines to move back to the start
-        """
-        for i in steps[-2::-1] + [(0, 0)]:
-            self.move(i)
-        self.log("Moved back to start!")
-        """
         self.paths[len(steps)] = steps
 
     def reset(self) -> None:
@@ -251,5 +245,14 @@ class FloodFill:
 
         :return: None
         """
+        if self.paths:
+            self.log("Moving back to start...")
+            steps = self.paths[min(self.paths)]
+            print(steps)
+            for i in steps[-2::-1] + [(0, 0)]:
+                self.move(i)
+            self.mouse.turn_left()
+            self.mouse.turn_left()
+            self.log("Moved back to start!")
         self.orient = DIRECTIONS.EAST
         self.current = (0, 0)

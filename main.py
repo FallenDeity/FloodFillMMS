@@ -15,7 +15,6 @@ def main():
         start = time.perf_counter()
         flood.run()
         flood.log(f"Took {time.perf_counter() - start} seconds")
-        flood.mouse.ack_reset()
         flood.reset()
         counter += 1
     path = flood.paths[min(flood.paths.keys())]

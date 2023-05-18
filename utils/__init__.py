@@ -34,7 +34,3 @@ class Drive(abc.ABC):
     @abc.abstractmethod
     def turn_left(self) -> None:
         ...
-
-    @abc.abstractmethod
-    def ack_reset(self) -> None:
-        ...

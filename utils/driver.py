@@ -91,9 +91,6 @@ class Driver(Drive):
             else:
                 break
 
-    def ack_reset(self) -> None:
-        raise NotImplementedError
-
     @property
     def maze_width(self) -> int:
         return self.width
