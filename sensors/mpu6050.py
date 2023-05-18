@@ -177,7 +177,7 @@ class MPU6050:
         "_calibrated",
     )
 
-    def __init__(self, address: int = 0x68, bus_number: int = 1) -> None:
+    def __init__(self, address: int = 0x68, bus_number: int = 1, calibrate: bool = False) -> None:
         self.address = address
         self.bus_number = bus_number
         self.bus = smbus.SMBus(self.bus_number)
@@ -185,7 +185,7 @@ class MPU6050:
         self._gyroscope_calibration = Gyroscope(0, 0, 0)
         self._calibrated = False
         self._init_mpu6050()
-        self._calibrate()
+        self._calibrate() if calibrate else None
 
     def _calibrate(self, iterations: int = 200) -> None:
         print("Calibrating MPU6050...")
@@ -352,7 +352,7 @@ class MPU6050:
         return Gyroscope(x=x, y=y, z=z)
 
 
-def calculate_yaw_angle(gyro: Gyroscope, acc: Accelerometer, dt: float) -> float:
+def calculate_yaw_angle(gyro: Gyroscope, acc: Accelerometer, dt: float = 0.01) -> float:
     """
     Calculate yaw angle
 
@@ -363,7 +363,7 @@ def calculate_yaw_angle(gyro: Gyroscope, acc: Accelerometer, dt: float) -> float
     acc : Accelerometer
         accelerometer data
     dt : float
-        time interval
+        time interval between measurements, by default 0.011
 
     Returns
     -------

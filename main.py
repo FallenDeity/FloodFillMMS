@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 
-from utils.api import COLORS, Mouse
+from utils.api import Mouse
 from utils.floodfill import FloodFill
 
 
@@ -23,7 +23,6 @@ def main():
     flood.log(f"Running optimized path of length {len(path)}")
     start = time.perf_counter()
     for step in path:
-        flood.mouse.set_color(step[0], step[1], COLORS.DARK_YELLOW)
         flood.move(step)
     flood.log(f"Took {time.perf_counter() - start} seconds")
 

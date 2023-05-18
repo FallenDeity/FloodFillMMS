@@ -6,10 +6,10 @@ import typing
 from collections import deque
 from functools import lru_cache
 
-from utils.api import COLORS, DIRECTIONS
+from utils.api import DIRECTIONS
 
 if typing.TYPE_CHECKING:
-    from utils.api import Mouse
+    from . import Drive
 
 
 __all__: typing.Tuple[str, ...] = ("FloodFill",)
@@ -31,7 +31,7 @@ class FloodFill:
     )
     mapping = {DIRECTIONS.EAST: (0, 1), DIRECTIONS.SOUTH: (1, 0), DIRECTIONS.WEST: (0, -1), DIRECTIONS.NORTH: (-1, 0)}
 
-    def __init__(self, mouse: "Mouse") -> None:
+    def __init__(self, mouse: "Drive") -> None:
         self.mouse = mouse
         self.w, self.h = mouse.maze_width, mouse.maze_height
         self.orient = DIRECTIONS.EAST
@@ -226,8 +226,6 @@ class FloodFill:
 
         :return: None
         """
-        self.mouse.set_color(self.current[0], self.current[1], COLORS.DARK_GREEN)
-        self.mouse.set_text(self.current[0], self.current[1], "Mickey")
         self.log("Starting...")
         steps: typing.List[PointType] = []
         while self.flood[self.current[0]][self.current[1]]:
@@ -238,9 +236,13 @@ class FloodFill:
         self.log(f"Done! {len(steps)} steps taken.")
         steps = self.cut_redundant_steps(steps)
         self.log(f"Optimized to {len(steps)} steps.")
+        # uncomment the following lines to move back to the start
+        """
+        for i in steps[-2::-1] + [(0, 0)]:
+            self.move(i)
+        self.log("Moved back to start!")
+        """
         self.paths[len(steps)] = steps
-        self.mouse.set_color(self.current[0], self.current[1], COLORS.RED)
-        self.mouse.set_text(self.current[0], self.current[1], "Mickey")
 
     def reset(self) -> None:
         """

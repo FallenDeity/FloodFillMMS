@@ -5,6 +5,8 @@ import enum
 import sys
 import typing
 
+from . import Drive
+
 __all__: typing.Tuple[str, ...] = (
     "COLORS",
     "COMMANDS",
@@ -90,7 +92,7 @@ class MouseCrashedError(Exception):
 
 
 @typing.final
-class Mouse:
+class Mouse(Drive):
     @staticmethod
     def command(command: Command) -> typing.Any:
         sys.stdout.write(f"{command.line}\n")
