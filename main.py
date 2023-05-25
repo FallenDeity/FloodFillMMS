@@ -15,7 +15,7 @@ def main():
         start = time.perf_counter()
         flood.run()
         flood.log(f"Took {time.perf_counter() - start} seconds")
-        flood.reset()
+        flood.reset(manual=False)
         counter += 1
     path = flood.paths[min(flood.paths.keys())]
     flood.log(f"Running optimized path of length {len(path)}")

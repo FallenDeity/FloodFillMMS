@@ -238,13 +238,23 @@ class FloodFill:
         self.log(f"Optimized to {len(steps)} steps.")
         self.paths[len(steps)] = steps
 
-    def reset(self) -> None:
+    def reset(self, manual: bool = True) -> None:
         """
         The reset function is used to reset the state of the environment.
         It should be called at the beginning of each episode, and it will return a new observation.
 
+        Parameters
+        ----------
+        manual : bool
+            Whether the bot was bought back to the start manually or not
+
         :return: None
         """
+        if manual:
+            self.mouse.ack_reset()
+            self.current = (0, 0)
+            self.orient = DIRECTIONS.EAST
+            return
         if self.paths:
             self.log("Moving back to start...")
             steps = self.paths[min(self.paths)]
