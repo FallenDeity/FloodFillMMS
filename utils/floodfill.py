@@ -248,11 +248,6 @@ class FloodFill:
         if self.paths:
             self.log("Moving back to start...")
             steps = self.paths[min(self.paths)]
-            print(steps)
             for i in steps[-2::-1] + [(0, 0)]:
                 self.move(i)
-            self.mouse.turn_left()
-            self.mouse.turn_left()
             self.log("Moved back to start!")
-        self.orient = DIRECTIONS.EAST
-        self.current = (0, 0)
