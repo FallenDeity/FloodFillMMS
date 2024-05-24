@@ -4,6 +4,8 @@ import time
 
 from utils.api import COLORS, Mouse
 from utils.astar import AStar
+from utils.bfs import BFS
+from utils.dfs import DFS
 from utils.floodfill import FloodFill
 
 
@@ -40,8 +42,38 @@ def astar():
     start = time.perf_counter()
     for point in path:
         astar.move(point)
-        astar.mouse.set_color(*point, COLORS.DARK_RED)
+        astar.mouse.set_color(*point, COLORS.DARK_BLUE)
     astar.log(f"Took {time.perf_counter() - start} seconds")
+
+
+def bfs():
+    bfs = BFS(mouse=Mouse())
+    bfs.log(f"Starting at {bfs.current}")
+    start = time.perf_counter()
+    path = bfs.run(debug=True)
+    bfs.log(f"Took {time.perf_counter() - start} seconds")
+    bfs.log(f"Running optimized path of length {len(path)}")
+    bfs.reset()
+    start = time.perf_counter()
+    for point in path:
+        bfs.move(point)
+        bfs.mouse.set_color(*point, COLORS.DARK_GREEN)
+    bfs.log(f"Took {time.perf_counter() - start} seconds")
+
+
+def dfs():
+    dfs = DFS(mouse=Mouse())
+    dfs.log(f"Starting at {dfs.current}")
+    start = time.perf_counter()
+    path = dfs.run(debug=True)
+    dfs.log(f"Took {time.perf_counter() - start} seconds")
+    dfs.log(f"Running optimized path of length {len(path)}")
+    dfs.reset()
+    start = time.perf_counter()
+    for point in path:
+        dfs.move(point)
+        dfs.mouse.set_color(*point, COLORS.DARK_CYAN)
+    dfs.log(f"Took {time.perf_counter() - start} seconds")
 
 
 def reset():
@@ -51,8 +83,8 @@ def reset():
 
 
 def main():
-    floodfill()
-    reset()
+    # floodfill()
+    # reset()
     astar()
 
 

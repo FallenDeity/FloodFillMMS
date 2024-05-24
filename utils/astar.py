@@ -21,9 +21,9 @@ PointType = typing.Tuple[int, int]
 class Node:
     parent: typing.Optional[Node]
     position: PointType
-    g: int
-    h: int
-    f: int
+    g: float
+    h: float
+    f: float
 
     def __lt__(self, other: Node) -> bool:
         return self.f < other.f
@@ -60,7 +60,7 @@ class AStar:
         self.paths: typing.Dict[int, typing.List[PointType]] = {}
         self.walls: typing.Dict[PointType, typing.List[PointType]] = {}
 
-    def heuristic(self, a: PointType, b: PointType) -> int:
+    def heuristic(self, a: PointType, b: PointType) -> float:
         """
         The heuristic function is used to calculate the distance between two points.
 
@@ -68,7 +68,23 @@ class AStar:
         :param b: PointType: The second point
         :return: int: The distance between the two points
         """
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+        import math
+
+        heuristics: typing.Dict[str, typing.Callable[[PointType, PointType], float]] = {
+            "manhattan": lambda x, y: abs(x[0] - y[0]) + abs(x[1] - y[1]),
+            "euclidean": lambda x, y: 4 * ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** 0.5,
+            "octile": lambda x, y: max(abs(x[0] - y[0]), abs(x[1] - y[1])),
+            "chebyshev": lambda x, y: max(abs(x[0] - y[0]), abs(x[1] - y[1])),
+            "diagonal": lambda x, y: abs(x[0] - y[0])
+            + abs(x[1] - y[1])
+            + (2**0.5 - 2) * min(abs(x[0] - y[0]), abs(x[1] - y[1])),
+            "centroid": lambda x, y: math.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
+            + math.sqrt((x[0] - self.w // 2) ** 2 + (x[1] - self.h // 2) ** 2)
+            + math.sqrt((y[0] - self.w // 2) ** 2 + (y[1] - self.h // 2) ** 2),
+            "none": lambda x, y: 0,
+        }
+        # euclidean heuristic multiplier with weight 4 gives best results and centroid heuristic is the best
+        return heuristics["euclidean"](a, b)
 
     @lru_cache(maxsize=None)
     def neighbors(self, cell: PointType) -> typing.List[PointType]:
@@ -147,7 +163,7 @@ class AStar:
         self.orient = DIRECTIONS(self.orient + orient_diff)
 
     def run(self, debug: bool = False) -> typing.List[PointType]:
-        """ 
+        """
         The run function is used to run the A* algorithm. It creates 2 lists, open_list and closed_list. The open_list
         is a list of nodes that have been visited but not yet expanded. The closed_list is a list of nodes that have
         been visited and expanded. We start with the start node and add it to the open_list. We then loop through the
