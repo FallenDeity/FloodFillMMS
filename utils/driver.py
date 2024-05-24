@@ -3,6 +3,9 @@ import typing as t
 from ..sensors import hcsr04, l29x, mpu6050
 from . import Drive
 
+if t.TYPE_CHECKING:
+    from utils.api import COLORS
+
 
 class Driver(Drive):
     left_motor = l29x.Motor(direction_pin=20, pwm_pin=16, enable_pin=21)
@@ -92,6 +95,9 @@ class Driver(Drive):
                 break
 
     def ack_reset(self) -> None:
+        pass
+
+    def set_color(self, x: int, y: int, color: "COLORS") -> None:
         pass
 
     @property

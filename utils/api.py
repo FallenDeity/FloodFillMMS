@@ -146,14 +146,14 @@ class Mouse(Drive):
     def clear_wall(self, x: int, y: int, direction: DIRECTIONS) -> None:
         self.command(Command(COMMANDS.CLEARWALL, (x, y, DIRECTIONS.from_int(direction)[0])))
 
-    def set_color(self, x: int, y: int, color: COLORS) -> None:
-        self.command(Command(COMMANDS.SETCOLOR, (x, y, color.value)))
-
     def clear_color(self, x: int, y: int) -> None:
         self.command(Command(COMMANDS.CLEARCOLOR, (x, y)))
 
     def clear_all_color(self) -> None:
         self.command(Command(COMMANDS.CLEARALLCOLOR, ()))
+
+    def set_color(self, x: int, y: int, color: COLORS) -> None:
+        self.command(Command(COMMANDS.SETCOLOR, (x, y, color.value)))
 
     def set_text(self, x: int, y: int, text: str) -> None:
         self.command(Command(COMMANDS.SETTEXT, (x, y, text)))

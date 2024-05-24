@@ -1,25 +1,33 @@
 import abc
 import typing as t
 
+if t.TYPE_CHECKING:
+    from utils.api import COLORS
+
 
 class Drive(abc.ABC):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def maze_width(self) -> int:
         ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def maze_height(self) -> int:
         ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def wall_front(self) -> bool:
         ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def wall_right(self) -> bool:
         ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def wall_left(self) -> bool:
         ...
 
@@ -37,4 +45,8 @@ class Drive(abc.ABC):
 
     @abc.abstractmethod
     def ack_reset(self) -> None:
+        ...
+
+    @abc.abstractmethod
+    def set_color(self, x: int, y: int, color: "COLORS") -> None:
         ...

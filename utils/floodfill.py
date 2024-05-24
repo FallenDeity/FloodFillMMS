@@ -6,7 +6,7 @@ import typing
 from collections import deque
 from functools import lru_cache
 
-from utils.api import DIRECTIONS
+from utils.api import COLORS, DIRECTIONS
 
 if typing.TYPE_CHECKING:
     from . import Drive
@@ -98,6 +98,8 @@ class FloodFill:
 
         :return: None
         """
+        if self.current in self.walls:
+            return
         lw, rw, fw = self.mouse.wall_left, self.mouse.wall_right, self.mouse.wall_front
         walls: typing.Set[DIRECTIONS] = set()
         if lw:
@@ -214,7 +216,7 @@ class FloodFill:
             new_steps.append(current)
         return new_steps
 
-    def run(self) -> None:
+    def run(self, debug: bool = False) -> None:
         """
         The run function is the main function of the algorithm. It starts by setting
         the color and text of the current cell to green and &quot;Mickey&quot; respectively, then
@@ -224,6 +226,7 @@ class FloodFill:
         visited. Once all cells have been visited, it logs how many steps were taken and
         then optimizes those steps using cut_redundant_steps().
 
+        :param debug: bool: Determine whether or not to print debug information
         :return: None
         """
         self.log("Starting...")
@@ -232,6 +235,8 @@ class FloodFill:
             self.update_walls()
             cell = self.find_cell(self.current)
             self.move(cell)
+            if debug:
+                self.mouse.set_color(*cell, COLORS.DARK_YELLOW)
             steps.append(cell)
         self.log(f"Done! {len(steps)} steps taken.")
         steps = self.cut_redundant_steps(steps)
