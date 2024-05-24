@@ -40,11 +40,10 @@ https://github.com/FallenDeity/FloodFillMMS/assets/61227305/46299b9b-0c4c-4e18-b
 
 https://github.com/FallenDeity/FloodFillMMS/assets/61227305/61abf103-decd-40ca-8abe-406ecd8dfec0
 
-## DFS 
+## DFS
 
 https://github.com/FallenDeity/FloodFillMMS/assets/61227305/efd6e324-8242-41c8-9b4c-23dc19a17d92
 
 ## BFS
 
 https://github.com/FallenDeity/FloodFillMMS/assets/61227305/07efd591-6d32-48c9-9e9f-49423a857794
-

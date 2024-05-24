@@ -72,7 +72,8 @@ class AStar:
 
         heuristics: typing.Dict[str, typing.Callable[[PointType, PointType], float]] = {
             "manhattan": lambda x, y: abs(x[0] - y[0]) + abs(x[1] - y[1]),  # abs(x[0] - y[0]) + abs(x[1] - y[1]) * 16
-            "euclidean": lambda x, y: ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** 0.5,  # ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** 0.5 * 4
+            "euclidean": lambda x, y: ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
+            ** 0.5,  # ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** 0.5 * 4
             "octile": lambda x, y: max(abs(x[0] - y[0]), abs(x[1] - y[1])),
             "chebyshev": lambda x, y: max(abs(x[0] - y[0]), abs(x[1] - y[1])),
             "diagonal": lambda x, y: abs(x[0] - y[0])
