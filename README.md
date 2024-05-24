@@ -16,8 +16,10 @@ Follow the instructions from [here](https://github.com/mackorone/mms-python) to 
 
 # Demo
 
-### Flood Fill
+## Flood Fill
 
+https://github.com/FallenDeity/FloodFillMMS/assets/61227305/784d277b-250d-4973-8722-d6c7e42aa83f
 
-### A* Pathfinding
+## A* Pathfinding
 
+https://github.com/FallenDeity/FloodFillMMS/assets/61227305/46299b9b-0c4c-4e18-bbd7-82d62d23e697
