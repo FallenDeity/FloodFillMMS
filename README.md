@@ -16,12 +16,8 @@ Follow the instructions from [here](https://github.com/mackorone/mms-python) to 
 
 # Demo
 
-### 3 Iterations
+### Flood Fill
 
-![Image](assets/picture.png)
 
-![Video](assets/video.gif)
+### A* Pathfinding
 
-### 5 Iterations
-
-![Image](assets/picture_2.png)

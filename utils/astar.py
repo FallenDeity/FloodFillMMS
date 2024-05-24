@@ -61,6 +61,13 @@ class AStar:
         self.walls: typing.Dict[PointType, typing.List[PointType]] = {}
 
     def heuristic(self, a: PointType, b: PointType) -> int:
+        """
+        The heuristic function is used to calculate the distance between two points.
+
+        :param a: PointType: The first point
+        :param b: PointType: The second point
+        :return: int: The distance between the two points
+        """
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
     @lru_cache(maxsize=None)
@@ -140,9 +147,19 @@ class AStar:
         self.orient = DIRECTIONS(self.orient + orient_diff)
 
     def run(self, debug: bool = False) -> typing.List[PointType]:
+        """ 
+        The run function is used to run the A* algorithm. It creates 2 lists, open_list and closed_list. The open_list
+        is a list of nodes that have been visited but not yet expanded. The closed_list is a list of nodes that have
+        been visited and expanded. We start with the start node and add it to the open_list. We then loop through the
+        open_list until it is empty. We pop the first node from the open_list and add it to the closed_list. We then
+        check if the current node is the destination node. If it is, we return the path from the start node to the
+        destination node. If it is not, we generate the children of the current node and add them to the open_list.
+        We then loop through the children and calculate the f value of each child. If the child is in the closed_list,
+        we skip it. If the child is in the open_list, we skip it. If the child is not in the open_list, we add it to the
+        open_list. We then repeat the process until we find the destination node or the open_list is empty.
+        """
         start_node = Node(parent=None, position=self.current, g=0, h=0, f=0)
         end_nodes = [Node(parent=None, position=pos, g=0, h=0, f=0) for pos in self.destination]
-        all_nodes: typing.Dict[PointType, Node] = {start_node.position: start_node}
         last_node = start_node
         open_list: typing.List[Node] = []
         closed_list: typing.List[Node] = []
@@ -189,7 +206,6 @@ class AStar:
                     h=self.heuristic(node_position, end_node.position),
                     f=0,
                 )
-                all_nodes[node_position] = new_node
                 children.append(new_node)
 
             for child in children:
@@ -206,11 +222,7 @@ class AStar:
         The reset function is used to reset the state of the environment.
         It should be called at the beginning of each episode, and it will return a new observation.
 
-        Parameters
-        ----------
-        manual : bool
-            Whether the bot was bought back to the start manually or not
-
+        :param manual: bool: Determine if the function should reset the mouse manually
         :return: None
         """
         if manual:
