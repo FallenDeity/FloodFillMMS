@@ -71,9 +71,10 @@ class AStar:
         import math
 
         heuristics: typing.Dict[str, typing.Callable[[PointType, PointType], float]] = {
-            "manhattan": lambda x, y: abs(x[0] - y[0]) + abs(x[1] - y[1]),  # abs(x[0] - y[0]) + abs(x[1] - y[1]) * 16
-            "euclidean": lambda x, y: ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
-            ** 0.5,  # ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** 0.5 * 4
+            # abs(x[0] - y[0]) + abs(x[1] - y[1]) * 16
+            "manhattan": lambda x, y: abs(x[0] - y[0]) + abs(x[1] - y[1]),
+            # ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** 0.5 * 4
+            "euclidean": lambda x, y: ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** 0.5,
             "octile": lambda x, y: max(abs(x[0] - y[0]), abs(x[1] - y[1])),
             "chebyshev": lambda x, y: max(abs(x[0] - y[0]), abs(x[1] - y[1])),
             "diagonal": lambda x, y: abs(x[0] - y[0])
@@ -84,7 +85,8 @@ class AStar:
             + math.sqrt((y[0] - self.w // 2) ** 2 + (y[1] - self.h // 2) ** 2),
             "none": lambda x, y: 0,
         }
-        # euclidean heuristic multiplier with weight 4 gives best results and centroid heuristic is the best, weighted manhattan with multiplier 16 is also good
+        # euclidean heuristic multiplier with weight 4 gives best results and centroid heuristic is the best
+        # weighted manhattan with multiplier 16 is also good
         return heuristics["manhattan"](a, b)
 
     @lru_cache(maxsize=None)
