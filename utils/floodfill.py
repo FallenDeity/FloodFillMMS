@@ -61,7 +61,10 @@ class FloodFill:
 
         :return: A 2d array of integers, where each integer represents the number of tiles
         """
-        return [[min(*[abs(end[0] - x) + abs(end[1] - y) for end in self.destination]) for x in range(self.w)] for y in range(self.h)]
+        return [
+            [min(*[abs(end[0] - x) + abs(end[1] - y) for end in self.destination]) for x in range(self.w)]
+            for y in range(self.h)
+        ]
 
     @lru_cache(maxsize=None)
     def neighbors(self, cell: PointType) -> typing.List[PointType]:
@@ -242,9 +245,12 @@ class FloodFill:
         return steps
 
     def update_flood_matrix(self, destinations: typing.List[PointType]) -> None:
-        self.flood = [[min([abs(end[0] - x) + abs(end[1] - y) for end in destinations]) for x in range(self.w)] for y in range(self.h)]
+        self.flood = [
+            [min([abs(end[0] - x) + abs(end[1] - y) for end in destinations]) for x in range(self.w)]
+            for y in range(self.h)
+        ]
         current_x, current_y = self.current
-        while self.flood[current_x][current_y]: 
+        while self.flood[current_x][current_y]:
             cell = (current_x, current_y)
             current_x, current_y = self.find_cell(cell, cell)
 
@@ -278,8 +284,6 @@ class FloodFill:
             at_end = self.current in self.destination
             self.update_flood_matrix([(0, 0)] if at_end else self.destination)
             self.log("Flood fill matrix reset!")
-
-
 
     @property
     def destination(self) -> typing.List[PointType]:
