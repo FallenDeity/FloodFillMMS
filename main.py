@@ -11,19 +11,23 @@ from utils.floodfill import FloodFill
 
 def floodfill():
     flood = FloodFill(mouse=Mouse())
-    print(f"Starting at {flood.current}")
+    flood.log(f"Starting at {flood.current}")
     counter = 0
     while True:
-        if counter == 5:
+        if counter == 6:
             break
         start = time.perf_counter()
         flood.run(debug=True)
         flood.log(f"Took {time.perf_counter() - start} seconds")
+        for i in flood.flood:
+            flood.log(i)
         flood.reset(manual=False)
         counter += 1
+    flood.log(flood.paths)
     path = flood.paths[min(flood.paths.keys())]
     flood.log(f"Running optimized path of length {len(path)}")
     start = time.perf_counter()
+    flood.reset(manual=True)
     for step in path:
         flood.move(step)
         flood.mouse.set_color(*step, COLORS.DARK_RED)
@@ -83,9 +87,9 @@ def reset():
 
 
 def main():
-    # floodfill()
+    floodfill()
     # reset()
-    astar()
+    # astar()
 
 
 if __name__ == "__main__":

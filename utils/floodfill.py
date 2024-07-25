@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import copy
+import itertools
 import sys
 import typing
 from collections import deque
@@ -61,17 +61,7 @@ class FloodFill:
 
         :return: A 2d array of integers, where each integer represents the number of tiles
         """
-        midpoint = (self.w - 1) / 2
-        matrix: typing.List[typing.List[int]] = []
-        for y in range(self.h):
-            row: typing.List[int] = []
-            for x in range(self.w):
-                val = midpoint - abs(x - midpoint) + max(0, int(y - midpoint))
-                row.append(int(val))
-            row = row[: int(midpoint + 1)][::-1]
-            matrix.append(row + copy.deepcopy(row[::-1]))
-        matrix = matrix[::-1][: int(midpoint + 1)]
-        return matrix + copy.deepcopy(matrix[::-1])
+        return [[min(*[abs(end[0] - x) + abs(end[1] - y) for end in self.destination]) for x in range(self.w)] for y in range(self.h)]
 
     @lru_cache(maxsize=None)
     def neighbors(self, cell: PointType) -> typing.List[PointType]:
@@ -139,6 +129,7 @@ class FloodFill:
     def find_cell(
         self,
         cell: PointType,
+        current_cell: PointType,
         ignore: typing.Optional[typing.Set[PointType]] = None,
     ) -> PointType:
         """
@@ -156,7 +147,7 @@ class FloodFill:
         :return: The next cell that the robot should move to
         """
         ignore = ignore or set()
-        neighbors = [i for i in self.neighbors(self.current) if i not in ignore]
+        neighbors = [i for i in self.neighbors(current_cell) if i not in ignore]
         n_vals = [self.flood[i[0]][i[1]] for i in neighbors]
         indices = [i for i, v in enumerate(n_vals) if v == min(n_vals)]
         orient = self.mapping[self.orient]
@@ -168,7 +159,7 @@ class FloodFill:
             return next_cell
         self.floodfill_all(cell)
         ignore.add(next_cell)
-        return self.find_cell(cell, ignore)
+        return self.find_cell(cell, current_cell, ignore)
 
     def move(self, cell: PointType) -> None:
         """
@@ -181,24 +172,30 @@ class FloodFill:
             cell[0] - self.current[0],
             cell[1] - self.current[1],
         )
-        next_orient = [k for k, v in self.mapping.items() if v == diff][0]
-        orient_diff = next_orient - self.orient
-        check = DIRECTIONS(({orient_diff, orient_diff + 4} & set(range(1, 5))).pop())
-        match check:
-            case DIRECTIONS.NORTH:
-                self.mouse.move_forward()
-            case DIRECTIONS.EAST:
-                self.mouse.turn_right()
-                self.mouse.move_forward()
-            case DIRECTIONS.WEST:
-                self.mouse.turn_left()
-                self.mouse.move_forward()
-            case DIRECTIONS.SOUTH:
-                self.mouse.turn_left()
-                self.mouse.turn_left()
-                self.mouse.move_forward()
-        self.current = cell
-        self.orient = DIRECTIONS(self.orient + orient_diff)
+        if diff == (0, 0):
+            return
+        try:
+            next_orient = [k for k, v in self.mapping.items() if v == diff][0]
+            orient_diff = next_orient - self.orient
+            check = DIRECTIONS(({orient_diff, orient_diff + 4} & set(range(1, 5))).pop())
+            match check:
+                case DIRECTIONS.NORTH:
+                    self.mouse.move_forward()
+                case DIRECTIONS.EAST:
+                    self.mouse.turn_right()
+                    self.mouse.move_forward()
+                case DIRECTIONS.WEST:
+                    self.mouse.turn_left()
+                    self.mouse.move_forward()
+                case DIRECTIONS.SOUTH:
+                    self.mouse.turn_left()
+                    self.mouse.turn_left()
+                    self.mouse.move_forward()
+            self.current = cell
+            self.orient = DIRECTIONS(self.orient + orient_diff)
+        except Exception as e:
+            self.log("Diff:", diff, "Current:", self.current, "Cell:", cell)
+            raise e
 
     @staticmethod
     def cut_redundant_steps(steps: typing.List[PointType]) -> typing.List[PointType]:
@@ -216,7 +213,7 @@ class FloodFill:
             new_steps.append(current)
         return new_steps
 
-    def run(self, debug: bool = False) -> None:
+    def run(self, debug: bool = False) -> typing.List[PointType]:
         """
         The run function is the main function of the algorithm. It starts by setting
         the color and text of the current cell to green and &quot;Mickey&quot; respectively, then
@@ -230,10 +227,10 @@ class FloodFill:
         :return: None
         """
         self.log("Starting...")
-        steps: typing.List[PointType] = []
+        steps: typing.List[PointType] = [self.current]
         while self.flood[self.current[0]][self.current[1]]:
             self.update_walls()
-            cell = self.find_cell(self.current)
+            cell = self.find_cell(self.current, self.current)
             self.move(cell)
             if debug:
                 self.mouse.set_color(*cell, COLORS.DARK_YELLOW)
@@ -241,7 +238,15 @@ class FloodFill:
         self.log(f"Done! {len(steps)} steps taken.")
         steps = self.cut_redundant_steps(steps)
         self.log(f"Optimized to {len(steps)} steps.")
-        self.paths[len(steps)] = steps
+        self.paths[len(steps)] = steps if steps[0] == (0, 0) else steps[::-1]
+        return steps
+
+    def update_flood_matrix(self, destinations: typing.List[PointType]) -> None:
+        self.flood = [[min([abs(end[0] - x) + abs(end[1] - y) for end in destinations]) for x in range(self.w)] for y in range(self.h)]
+        current_x, current_y = self.current
+        while self.flood[current_x][current_y]: 
+            cell = (current_x, current_y)
+            current_x, current_y = self.find_cell(cell, cell)
 
     def reset(self, manual: bool = True) -> None:
         """
@@ -262,7 +267,27 @@ class FloodFill:
             return
         if self.paths:
             self.log("Moving back to start...")
-            steps = self.paths[min(self.paths)]
-            for i in steps[-2::-1] + [(0, 0)]:
-                self.move(i)
-            self.log("Moved back to start!")
+            # steps = self.paths[min(self.paths)]
+            # for i in steps[-2::-1] + [(0, 0)]:
+            #     self.move(i)
+
+            # self.update_flood_matrix_with_walls([(0, 0)])
+            # for i in self.flood:
+            #     self.log(i)
+            # exit(0)
+            at_end = self.current in self.destination
+            self.update_flood_matrix([(0, 0)] if at_end else self.destination)
+            self.log("Flood fill matrix reset!")
+
+
+
+    @property
+    def destination(self) -> typing.List[PointType]:
+        """
+        The destination property returns the destination of the mouse.
+
+        :return: List[PointType]: The destination of the mouse
+        """
+        return list(
+            itertools.product(range((self.w // 2) - 1, (self.w // 2) + 1), range((self.h // 2) - 1, (self.h // 2) + 1))
+        )
